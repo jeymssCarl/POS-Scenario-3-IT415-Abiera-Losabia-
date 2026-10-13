@@ -12,10 +12,6 @@
 
   const SCREEN_IDS = ["ordering", "payment", "receipt"];
 
-  /**
-   * Show one screen and hide the others.
-   * @param {"ordering"|"payment"|"receipt"} name
-   */
   function showScreen(name) {
     if (SCREEN_IDS.indexOf(name) === -1) return;
     SCREEN_IDS.forEach(function (id) {
@@ -31,10 +27,6 @@
 
   /* ---------- Utility ---------- */
 
-  /**
-   * Escape user-controllable text before inserting into innerHTML.
-   * Product names are hard-coded, but this prevents future regressions.
-   */
   function escapeHtml(str) {
     return String(str)
       .replace(/&/g, "&amp;")
@@ -119,6 +111,122 @@
     panel.innerHTML = html;
   }
 
+  /* ---------- Payment panel (R7, R8, R9, R10) ---------- */
+
+  function renderPayment() {
+    const panel = document.getElementById("payment-panel");
+    if (!panel) return;
+
+    const total = getTotal(cart);
+
+    let html = '<h2 class="panel-title">Payment</h2>';
+
+    html += '<div class="payment-row total-due">';
+    html +=   '<span class="label">TOTAL AMOUNT DUE</span>';
+    html +=   '<span class="value">' + formatPeso(total) + '</span>';
+    html += '</div>';
+
+    html += '<div class="payment-input-group">';
+    html +=   '<label for="cash-input">Amount Paid (Cash)</label>';
+    html +=   '<div class="payment-input-wrap">';
+    html +=     '<span class="peso-prefix">₱</span>';
+    html +=     '<input type="number" id="cash-input" step="0.01" min="0" inputmode="decimal" autocomplete="off" placeholder="0.00">';
+    html +=   '</div>';
+    html +=   '<div id="payment-error" class="feedback error" role="alert"></div>';
+    html += '</div>';
+
+    html += '<div class="payment-actions">';
+    html +=   '<button type="button" id="btn-back" class="btn btn-secondary">Back to Order</button>';
+    html +=   '<button type="button" id="btn-confirm" class="btn btn-primary">Confirm Payment</button>';
+    html += '</div>';
+
+    panel.innerHTML = html;
+  }
+
+  /**
+   * Show an inline error under the cash input and highlight the field.
+   * @param {string} message
+   */
+  function showPaymentError(message) {
+    const errorBox = document.getElementById("payment-error");
+    const input = document.getElementById("cash-input");
+    if (errorBox) {
+      errorBox.textContent = message;
+      errorBox.classList.add("show");
+    }
+    if (input) {
+      input.classList.add("has-error");
+      input.focus();
+    }
+  }
+
+  function clearPaymentError() {
+    const errorBox = document.getElementById("payment-error");
+    const input = document.getElementById("cash-input");
+    if (errorBox) {
+      errorBox.textContent = "";
+      errorBox.classList.remove("show");
+    }
+    if (input) {
+      input.classList.remove("has-error");
+    }
+  }
+
+  /**
+   * Handle a "Confirm Payment" click.
+   * Validates, builds the Transaction, and advances to the receipt screen.
+   */
+  function handleConfirmPayment() {
+    const input = document.getElementById("cash-input");
+    if (!input) return;
+
+    const total = getTotal(cart);
+    if (total <= 0) {
+      showPaymentError("Cart is empty. Please add items before paying.");
+      return;
+    }
+
+    const result = validatePayment(input.value, total);
+
+    if (!result.ok) {
+      showPaymentError(result.message);
+      return;
+    }
+
+    clearPaymentError();
+
+    const change = computeChange(result.amountCentavos, total);
+    const reference = generateReference();
+    const txn = createTransaction(
+      reference,
+      cart.items,
+      total,
+      result.amountCentavos,
+      change
+    );
+
+    currentTransaction = txn;
+
+    // M9 will render the receipt screen; for now we switch to it
+    // and show a minimal placeholder so the flow is testable.
+    renderReceiptPlaceholder();
+    showScreen("receipt");
+  }
+
+  /* ---------- Receipt panel (placeholder until M9) ---------- */
+
+  function renderReceiptPlaceholder() {
+    const panel = document.getElementById("receipt-panel");
+    if (!panel || !currentTransaction) return;
+
+    const txn = currentTransaction;
+    let html = '<h2 class="panel-title">Receipt</h2>';
+    html += '<div class="feedback success show">Payment successful.</div>';
+    html += '<pre id="receipt-text">' + escapeHtml(formatReceipt(txn)) + '</pre>';
+    html += '<div class="cart-footer"><button type="button" id="btn-new-txn" class="btn btn-primary" disabled>New Transaction (M9)</button></div>';
+    panel.innerHTML = html;
+  }
+
   /* ---------- Event handling ---------- */
 
   function handleProductClick(event) {
@@ -130,8 +238,15 @@
   }
 
   function handleCartClick(event) {
-    const btn = event.target.closest("button[data-action]");
+    const btn = event.target.closest("button[data-action], button#btn-proceed");
     if (!btn) return;
+
+    if (btn.id === "btn-proceed") {
+      if (cart.items.length === 0) return;
+      renderPayment();
+      showScreen("payment");
+      return;
+    }
 
     const action = btn.dataset.action;
     const productId = Number(btn.dataset.productId);
@@ -145,9 +260,25 @@
     } else if (action === "remove") {
       removeItem(cart, productId);
       renderCart();
-    } else if (btn.id === "btn-proceed") {
-      // Wired in M8 — safe no-op for now.
-      showScreen("payment");
+    }
+  }
+
+  function handlePaymentClick(event) {
+    const btn = event.target.closest("button");
+    if (!btn) return;
+
+    if (btn.id === "btn-back") {
+      renderCart();
+      showScreen("ordering");
+    } else if (btn.id === "btn-confirm") {
+      handleConfirmPayment();
+    }
+  }
+
+  function handlePaymentKeydown(event) {
+    if (event.key === "Enter" && event.target.id === "cash-input") {
+      event.preventDefault();
+      handleConfirmPayment();
     }
   }
 
@@ -167,15 +298,21 @@
       cartPanel.addEventListener("click", handleCartClick);
     }
 
+    const paymentPanel = document.getElementById("payment-panel");
+    if (paymentPanel) {
+      paymentPanel.addEventListener("click", handlePaymentClick);
+      paymentPanel.addEventListener("keydown", handlePaymentKeydown);
+    }
+
     showScreen("ordering");
   }
 
-  // Expose a small API so later modules (M8, M9) can reuse state.
   window.POSApp = {
     cart: cart,
     showScreen: showScreen,
     renderCart: renderCart,
     renderProducts: renderProducts,
+    renderPayment: renderPayment,
     getCurrentTransaction: function () { return currentTransaction; },
     setCurrentTransaction: function (txn) { currentTransaction = txn; }
   };

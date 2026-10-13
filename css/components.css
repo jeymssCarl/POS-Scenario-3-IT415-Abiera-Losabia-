@@ -1,4 +1,5 @@
-/* components.css — Visual styling for panels, buttons, tables, feedback. */
+/* components.css — Full stylesheet: M6/M7 (products, cart, buttons)
+   + M8 (payment panel). Do not remove any block. */
 
 /* ---------- Panel headers ---------- */
 
@@ -11,7 +12,7 @@
   color: var(--color-text);
 }
 
-/* ---------- Product list ---------- */
+/* ---------- Product list (M6/M7) ---------- */
 
 #product-panel {
   display: flex;
@@ -51,7 +52,7 @@
   align-self: flex-start;
 }
 
-/* ---------- Buttons ---------- */
+/* ---------- Buttons (M6/M7) ---------- */
 
 .btn {
   display: inline-block;
@@ -101,7 +102,6 @@
   cursor: not-allowed;
 }
 
-/* Compact controls for cart rows */
 .btn-icon {
   width: 28px;
   height: 28px;
@@ -120,7 +120,7 @@
   background: #d1d5db;
 }
 
-/* ---------- Cart table ---------- */
+/* ---------- Cart table (M6/M7) ---------- */
 
 .cart-table {
   font-size: 0.9rem;
@@ -149,6 +149,7 @@
 .cart-table .actions {
   display: flex;
   gap: 4px;
+  align-items: center;
 }
 
 .cart-empty {
@@ -157,8 +158,6 @@
   color: var(--color-muted);
   font-style: italic;
 }
-
-/* ---------- Cart total + proceed ---------- */
 
 .cart-total-row {
   display: flex;
@@ -186,7 +185,7 @@
   justify-content: flex-end;
 }
 
-/* ---------- Feedback ---------- */
+/* ---------- Feedback (M6/M7) ---------- */
 
 .feedback {
   margin-top: var(--space-sm);
@@ -210,4 +209,132 @@
   background: #fee2e2;
   color: var(--color-danger);
   border: 1px solid #fecaca;
+}
+
+/* ---------- Payment panel (M8) ---------- */
+
+#payment-panel {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.payment-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.payment-row:last-of-type {
+  border-bottom: none;
+}
+
+.payment-row .label {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.payment-row .value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.payment-row.total-due .value {
+  color: var(--color-primary);
+  font-size: 1.3rem;
+}
+
+.payment-input-group {
+  margin-top: var(--space-lg);
+}
+
+.payment-input-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  margin-bottom: var(--space-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.payment-input-wrap {
+  position: relative;
+}
+
+.payment-input-wrap .peso-prefix {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-muted);
+  font-weight: 600;
+  pointer-events: none;
+}
+
+#cash-input {
+  width: 100%;
+  padding: 0.7rem 0.75rem 0.7rem 2rem;
+  font-size: 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+#cash-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+#cash-input.has-error {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.payment-change-preview {
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  border-radius: var(--radius);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.payment-change-preview .label {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.payment-change-preview .value {
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.payment-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+/* ---------- Receipt placeholder (M8 — replaced properly in M9) ---------- */
+
+#receipt-text {
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  background: #f9fafb;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  white-space: pre;
+  overflow-x: auto;
 }
