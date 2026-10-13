@@ -11,23 +11,78 @@
 <body>
 
   <header id="app-header">
-    <h1>Milk Tea POS — Scenario 3</h1>
+    <div class="header-left">
+      <h1>Milk Tea POS — Scenario 3</h1>
+    </div>
+
+    <div class="header-right">
+
+      <!-- Notification bell + dropdown -->
+      <div class="header-action" id="notification-wrap">
+        <button type="button" id="btn-notification" class="icon-btn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span id="notification-badge" class="badge" hidden>0</span>
+        </button>
+        <div id="notification-panel" class="dropdown" hidden>
+          <div class="dropdown-header">
+            <span>Notifications</span>
+            <button type="button" id="btn-mark-all-read" class="text-btn">Mark all read</button>
+          </div>
+          <div id="notification-list" class="dropdown-list"></div>
+        </div>
+      </div>
+
+      <!-- Profile view -->
+      <div class="header-action" id="profile-wrap">
+        <button type="button" id="btn-profile" class="profile-btn" aria-label="Profile" aria-haspopup="true" aria-expanded="false">
+          <span class="avatar" aria-hidden="true">C</span>
+          <span class="profile-meta">
+            <span class="profile-name">Cashier</span>
+            <span class="profile-role">Shift — Active</span>
+          </span>
+        </button>
+        <div id="profile-panel" class="dropdown" hidden>
+          <div class="dropdown-header">
+            <span>Signed in</span>
+          </div>
+          <div class="profile-info">
+            <div class="avatar avatar-lg" aria-hidden="true">C</div>
+            <div>
+              <div class="profile-info-name">Cashier</div>
+              <div class="profile-info-role">Milk Tea POS — Scenario 3</div>
+            </div>
+          </div>
+          <div class="dropdown-divider"></div>
+          <div class="profile-stat">
+            <span class="profile-stat-label">Transactions this session</span>
+            <span class="profile-stat-value" id="profile-txn-count">0</span>
+          </div>
+          <div class="profile-stat">
+            <span class="profile-stat-label">Total collected</span>
+            <span class="profile-stat-value" id="profile-txn-total">₱0.00</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </header>
 
   <main id="app-main">
 
-    <!-- Screen 1: Ordering (product list + cart) -->
+    <div id="process-indicator" aria-label="Transaction progress"></div>
+
     <section id="screen-ordering" class="screen active">
       <div id="product-panel" class="panel"></div>
       <div id="cart-panel" class="panel"></div>
     </section>
 
-    <!-- Screen 2: Payment -->
     <section id="screen-payment" class="screen">
       <div id="payment-panel" class="panel"></div>
     </section>
 
-    <!-- Screen 3: Receipt -->
     <section id="screen-receipt" class="screen">
       <div id="receipt-panel" class="panel"></div>
     </section>

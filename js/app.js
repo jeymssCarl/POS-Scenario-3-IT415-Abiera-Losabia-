@@ -8,6 +8,15 @@
   const cart = createCart();
   let currentTransaction = null;
 
+  /** Notification log for this browser session. */
+  const notifications = [];
+
+  /** Session-level stats for the profile panel. */
+  const sessionStats = {
+    transactions: 0,
+    totalCollected: 0  // in centavos
+  };
+
   /* ---------- Screen switching ---------- */
 
   const SCREEN_IDS = ["ordering", "payment", "receipt"];
@@ -17,12 +26,67 @@
     SCREEN_IDS.forEach(function (id) {
       const el = document.getElementById("screen-" + id);
       if (!el) return;
-      if (id === name) {
-        el.classList.add("active");
-      } else {
-        el.classList.remove("active");
-      }
+      if (id === name) el.classList.add("active");
+      else el.classList.remove("active");
     });
+    renderProcessIndicator();
+  }
+
+  /* ---------- Process indicator ---------- */
+
+  function computeProcessState() {
+    const activeScreen = SCREEN_IDS.find(function (id) {
+      const el = document.getElementById("screen-" + id);
+      return el && el.classList.contains("active");
+    }) || "ordering";
+
+    const hasItems = cart.items.length > 0;
+    let current = 1;
+    if (activeScreen === "payment") current = 3;
+    else if (activeScreen === "receipt") current = 4;
+    else current = hasItems ? 2 : 1;
+
+    return { current: current };
+  }
+
+  function renderProcessIndicator() {
+    const host = document.getElementById("process-indicator");
+    if (!host) return;
+
+    const steps = [
+      { n: 1, label: "Browse & Add", hint: "Pick products" },
+      { n: 2, label: "Review Order", hint: "Check totals" },
+      { n: 3, label: "Payment",      hint: "Enter cash" },
+      { n: 4, label: "Receipt",      hint: "Done" }
+    ];
+
+    const current = computeProcessState().current;
+
+    let html = '<div class="process-card">';
+    html += '<div class="process-track" aria-hidden="true">';
+    for (let i = 1; i <= 4; i++) {
+      let cls = "process-track-segment";
+      if (i < current) cls += " done";
+      else if (i === current) cls += " active";
+      html += '<div class="' + cls + '"></div>';
+    }
+    html += '</div>';
+
+    html += '<div class="process-steps">';
+    steps.forEach(function (step) {
+      let cls = "process-step";
+      if (step.n < current) cls += " done";
+      else if (step.n === current) cls += " active";
+      const mark = step.n < current ? "✓" : String(step.n);
+      html += '<div class="' + cls + '">';
+      html +=   '<div class="process-step-icon" aria-hidden="true">' + mark + '</div>';
+      html +=   '<div class="process-step-label">' + step.label + '</div>';
+      html +=   '<div class="process-step-hint">' + step.hint + '</div>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+
+    host.innerHTML = html;
   }
 
   /* ---------- Utility ---------- */
@@ -34,6 +98,121 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  function formatTime(date) {
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  }
+
+  /* ---------- Notifications ---------- */
+
+  function pushNotification(txn) {
+    notifications.unshift({
+      id: "n-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+      title: "Transaction completed — " + txn.reference,
+      meta: formatTime(new Date()),
+      amount: txn.total,
+      read: false
+    });
+    renderNotifications();
+  }
+
+  function renderNotifications() {
+    const badge = document.getElementById("notification-badge");
+    const list = document.getElementById("notification-list");
+    if (!badge || !list) return;
+
+    const unread = notifications.filter(function (n) { return !n.read; }).length;
+
+    if (unread > 0) {
+      badge.textContent = String(unread);
+      badge.hidden = false;
+    } else {
+      badge.hidden = true;
+    }
+
+    if (notifications.length === 0) {
+      list.innerHTML = '<div class="dropdown-empty">No notifications yet.</div>';
+      return;
+    }
+
+    let html = "";
+    notifications.forEach(function (n) {
+      const cls = "notification-item " + (n.read ? "read" : "unread");
+      html += '<div class="' + cls + '" data-id="' + n.id + '">';
+      html +=   '<span class="notification-dot" aria-hidden="true"></span>';
+      html +=   '<div class="notification-body">';
+      html +=     '<div class="notification-title">' + escapeHtml(n.title) + '</div>';
+      html +=     '<div class="notification-meta">';
+      html +=       '<span>' + escapeHtml(n.meta) + '</span>';
+      html +=       '<span class="notification-amount">' + formatPeso(n.amount) + '</span>';
+      html +=     '</div>';
+      html +=   '</div>';
+      html += '</div>';
+    });
+    list.innerHTML = html;
+  }
+
+  function markNotificationRead(id) {
+    const n = notifications.find(function (x) { return x.id === id; });
+    if (n && !n.read) {
+      n.read = true;
+      renderNotifications();
+    }
+  }
+
+  function markAllNotificationsRead() {
+    let changed = false;
+    notifications.forEach(function (n) {
+      if (!n.read) { n.read = true; changed = true; }
+    });
+    if (changed) renderNotifications();
+  }
+
+  /* ---------- Profile ---------- */
+
+  function renderProfile() {
+    const countEl = document.getElementById("profile-txn-count");
+    const totalEl = document.getElementById("profile-txn-total");
+    if (countEl) countEl.textContent = String(sessionStats.transactions);
+    if (totalEl) totalEl.textContent = formatPeso(sessionStats.totalCollected);
+  }
+
+  /* ---------- Dropdown open/close ---------- */
+
+  function closeAllDropdowns() {
+    const nPanel = document.getElementById("notification-panel");
+    const pPanel = document.getElementById("profile-panel");
+    const nBtn = document.getElementById("btn-notification");
+    const pBtn = document.getElementById("btn-profile");
+    if (nPanel) nPanel.hidden = true;
+    if (pPanel) pPanel.hidden = true;
+    if (nBtn) nBtn.setAttribute("aria-expanded", "false");
+    if (pBtn) pBtn.setAttribute("aria-expanded", "false");
+  }
+
+  function toggleDropdown(which) {
+    const nPanel = document.getElementById("notification-panel");
+    const pPanel = document.getElementById("profile-panel");
+    const nBtn = document.getElementById("btn-notification");
+    const pBtn = document.getElementById("btn-profile");
+    if (!nPanel || !pPanel || !nBtn || !pBtn) return;
+
+    if (which === "notification") {
+      const willOpen = nPanel.hidden;
+      closeAllDropdowns();
+      if (willOpen) {
+        nPanel.hidden = false;
+        nBtn.setAttribute("aria-expanded", "true");
+      }
+    } else {
+      const willOpen = pPanel.hidden;
+      closeAllDropdowns();
+      if (willOpen) {
+        pPanel.hidden = false;
+        pBtn.setAttribute("aria-expanded", "true");
+      }
+    }
   }
 
   /* ---------- Product panel (R1, R2) ---------- */
@@ -109,6 +288,7 @@
     html += '</div>';
 
     panel.innerHTML = html;
+    renderProcessIndicator();
   }
 
   /* ---------- Payment panel (R7, R8, R9, R10) ---------- */
@@ -120,7 +300,6 @@
     const total = getTotal(cart);
 
     let html = '<h2 class="panel-title">Payment</h2>';
-
     html += '<div class="payment-row total-due">';
     html +=   '<span class="label">TOTAL AMOUNT DUE</span>';
     html +=   '<span class="value">' + formatPeso(total) + '</span>';
@@ -148,7 +327,8 @@
     const input = document.getElementById("cash-input");
     if (errorBox) {
       errorBox.textContent = message;
-      errorBox.classList.add("show");
+      errorBox.classList.add("show", "error");
+      errorBox.classList.remove("success");
     }
     if (input) {
       input.classList.add("has-error");
@@ -161,11 +341,9 @@
     const input = document.getElementById("cash-input");
     if (errorBox) {
       errorBox.textContent = "";
-      errorBox.classList.remove("show");
+      errorBox.classList.remove("show", "error", "success");
     }
-    if (input) {
-      input.classList.remove("has-error");
-    }
+    if (input) input.classList.remove("has-error");
   }
 
   function handleConfirmPayment() {
@@ -179,7 +357,6 @@
     }
 
     const result = validatePayment(input.value, total);
-
     if (!result.ok) {
       showPaymentError(result.message);
       return;
@@ -198,6 +375,13 @@
     );
 
     currentTransaction = txn;
+
+    // Session stats + notification
+    sessionStats.transactions += 1;
+    sessionStats.totalCollected += txn.total;
+    pushNotification(txn);
+    renderProfile();
+
     renderReceipt();
     showScreen("receipt");
   }
@@ -226,18 +410,12 @@
     panel.innerHTML = html;
   }
 
-  /**
-   * R12 — reset all state for the next customer.
-   */
   function handleNewTransaction() {
     clearCart(cart);
     currentTransaction = null;
     clearPaymentError();
-
-    // Re-render both panels from scratch so no stale state survives.
     renderCart();
-    renderPayment();  // clears the cash input because innerHTML is rebuilt
-
+    renderPayment();
     showScreen("ordering");
   }
 
@@ -259,7 +437,6 @@
       if (cart.items.length === 0) return;
       renderPayment();
       showScreen("payment");
-      // Focus the input for fast cashier workflow.
       const input = document.getElementById("cash-input");
       if (input) input.focus();
       return;
@@ -268,22 +445,14 @@
     const action = btn.dataset.action;
     const productId = Number(btn.dataset.productId);
 
-    if (action === "increment") {
-      increment(cart, productId);
-      renderCart();
-    } else if (action === "decrement") {
-      decrement(cart, productId);
-      renderCart();
-    } else if (action === "remove") {
-      removeItem(cart, productId);
-      renderCart();
-    }
+    if (action === "increment") { increment(cart, productId); renderCart(); }
+    else if (action === "decrement") { decrement(cart, productId); renderCart(); }
+    else if (action === "remove") { removeItem(cart, productId); renderCart(); }
   }
 
   function handlePaymentClick(event) {
     const btn = event.target.closest("button");
     if (!btn) return;
-
     if (btn.id === "btn-back") {
       renderCart();
       showScreen("ordering");
@@ -294,7 +463,6 @@
 
   function handlePaymentInput(event) {
     if (event.target.id !== "cash-input") return;
-    // CR-12: clear the error state as soon as the cashier edits the field.
     clearPaymentError();
   }
 
@@ -311,21 +479,25 @@
     handleNewTransaction();
   }
 
+  function handleNotificationPanelClick(event) {
+    const item = event.target.closest(".notification-item");
+    if (!item) return;
+    markNotificationRead(item.dataset.id);
+  }
+
   /* ---------- Boot ---------- */
 
   function init() {
     renderProducts();
     renderCart();
+    renderNotifications();
+    renderProfile();
 
     const productPanel = document.getElementById("product-panel");
-    if (productPanel) {
-      productPanel.addEventListener("click", handleProductClick);
-    }
+    if (productPanel) productPanel.addEventListener("click", handleProductClick);
 
     const cartPanel = document.getElementById("cart-panel");
-    if (cartPanel) {
-      cartPanel.addEventListener("click", handleCartClick);
-    }
+    if (cartPanel) cartPanel.addEventListener("click", handleCartClick);
 
     const paymentPanel = document.getElementById("payment-panel");
     if (paymentPanel) {
@@ -335,9 +507,43 @@
     }
 
     const receiptPanel = document.getElementById("receipt-panel");
-    if (receiptPanel) {
-      receiptPanel.addEventListener("click", handleReceiptClick);
+    if (receiptPanel) receiptPanel.addEventListener("click", handleReceiptClick);
+
+    // Notification and profile dropdowns
+    const nBtn = document.getElementById("btn-notification");
+    if (nBtn) nBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      toggleDropdown("notification");
+    });
+
+    const pBtn = document.getElementById("btn-profile");
+    if (pBtn) pBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      toggleDropdown("profile");
+    });
+
+    const nPanel = document.getElementById("notification-panel");
+    if (nPanel) {
+      nPanel.addEventListener("click", function (e) { e.stopPropagation(); });
+      nPanel.addEventListener("click", handleNotificationPanelClick);
     }
+
+    const pPanel = document.getElementById("profile-panel");
+    if (pPanel) pPanel.addEventListener("click", function (e) { e.stopPropagation(); });
+
+    const markAllBtn = document.getElementById("btn-mark-all-read");
+    if (markAllBtn) markAllBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      markAllNotificationsRead();
+    });
+
+    // Click outside closes any open dropdown
+    document.addEventListener("click", closeAllDropdowns);
+
+    // Escape key closes dropdowns
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeAllDropdowns();
+    });
 
     showScreen("ordering");
   }
@@ -349,8 +555,12 @@
     renderProducts: renderProducts,
     renderPayment: renderPayment,
     renderReceipt: renderReceipt,
+    renderProcessIndicator: renderProcessIndicator,
+    renderNotifications: renderNotifications,
     getCurrentTransaction: function () { return currentTransaction; },
-    setCurrentTransaction: function (txn) { currentTransaction = txn; }
+    setCurrentTransaction: function (txn) { currentTransaction = txn; },
+    getNotifications: function () { return notifications; },
+    getSessionStats: function () { return sessionStats; }
   };
 
   if (document.readyState === "loading") {
