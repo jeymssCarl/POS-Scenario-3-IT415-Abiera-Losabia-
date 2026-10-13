@@ -1,4 +1,213 @@
-/* Component-level styling. Populated as modules are built. */
+/* components.css — Visual styling for panels, buttons, tables, feedback. */
 
-/* Placeholder so the page renders without errors.
-   Real components added in M6–M9. */
+/* ---------- Panel headers ---------- */
+
+.panel-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+/* ---------- Product list ---------- */
+
+#product-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+}
+
+.product-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  background: #fafbfc;
+}
+
+.product-card .product-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.product-card .product-price {
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.product-card .btn-add {
+  align-self: flex-start;
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  display: inline-block;
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.btn-add,
+.btn-primary {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.btn-add:hover,
+.btn-primary:hover {
+  background: var(--color-primary-hover);
+}
+
+.btn-secondary {
+  background: #e5e7eb;
+  color: var(--color-text);
+}
+
+.btn-secondary:hover {
+  background: #d1d5db;
+}
+
+.btn-danger {
+  background: #fee2e2;
+  color: var(--color-danger);
+}
+
+.btn-danger:hover {
+  background: #fecaca;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Compact controls for cart rows */
+.btn-icon {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  line-height: 1;
+  border-radius: 6px;
+  background: #e5e7eb;
+  color: var(--color-text);
+}
+
+.btn-icon:hover {
+  background: #d1d5db;
+}
+
+/* ---------- Cart table ---------- */
+
+.cart-table {
+  font-size: 0.9rem;
+}
+
+.cart-table th,
+.cart-table td {
+  padding: 0.5rem 0.35rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.cart-table th {
+  font-weight: 600;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.cart-table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cart-table .actions {
+  display: flex;
+  gap: 4px;
+}
+
+.cart-empty {
+  padding: var(--space-lg) var(--space-md);
+  text-align: center;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+/* ---------- Cart total + proceed ---------- */
+
+.cart-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-md) 0;
+  margin-top: var(--space-sm);
+  border-top: 2px solid var(--color-border);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.cart-total-row .label {
+  color: var(--color-muted);
+}
+
+.cart-total-row .value {
+  color: var(--color-primary);
+  font-size: 1.2rem;
+}
+
+.cart-footer {
+  margin-top: var(--space-md);
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ---------- Feedback ---------- */
+
+.feedback {
+  margin-top: var(--space-sm);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  display: none;
+}
+
+.feedback.show {
+  display: block;
+}
+
+.feedback.success {
+  background: #dcfce7;
+  color: var(--color-success);
+  border: 1px solid #bbf7d0;
+}
+
+.feedback.error {
+  background: #fee2e2;
+  color: var(--color-danger);
+  border: 1px solid #fecaca;
+}
