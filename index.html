@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Milk Tea POS — Scenario 3</title>
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+  <header id="app-header">
+    <h1>Milk Tea POS — Scenario 3</h1>
+  </header>
+
+  <main id="app-main">
+
+    <!-- Screen 1: Ordering (product list + cart) -->
+    <section id="screen-ordering" class="screen active">
+      <div id="product-panel" class="panel">
+        <!-- Rendered by js/app.js -->
+      </div>
+      <div id="cart-panel" class="panel">
+        <!-- Rendered by js/app.js -->
+      </div>
+    </section>
+
+    <!-- Screen 2: Payment -->
+    <section id="screen-payment" class="screen">
+      <div id="payment-panel" class="panel">
+        <!-- Rendered by js/app.js -->
+      </div>
+    </section>
+
+    <!-- Screen 3: Receipt -->
+    <section id="screen-receipt" class="screen">
+      <div id="receipt-panel" class="panel">
+        <!-- Rendered by js/app.js -->
+      </div>
+    </section>
+
+  </main>
+
+  <!--
+    Load order matters:
+    catalog -> models -> cartLogic -> payment -> receipt -> app
+    Plain scripts (not type="module") so the app works via file://
+    without a local server.
+  -->
+  <script src="js/catalog.js"></script>
+  <script src="js/models.js"></script>
+  <script src="js/cartLogic.js"></script>
+  <script src="js/payment.js"></script>
+  <script src="js/receipt.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
