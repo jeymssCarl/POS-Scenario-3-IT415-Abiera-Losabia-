@@ -130,7 +130,7 @@
     html +=   '<label for="cash-input">Amount Paid (Cash)</label>';
     html +=   '<div class="payment-input-wrap">';
     html +=     '<span class="peso-prefix">₱</span>';
-    html +=     '<input type="number" id="cash-input" step="0.01" min="0" inputmode="decimal" autocomplete="off" placeholder="0.00">';
+    html +=     '<input type="text" id="cash-input" inputmode="decimal" autocomplete="off" placeholder="0.00">';
     html +=   '</div>';
     html +=   '<div id="payment-error" class="feedback error" role="alert"></div>';
     html += '</div>';
@@ -143,10 +143,6 @@
     panel.innerHTML = html;
   }
 
-  /**
-   * Show an inline error under the cash input and highlight the field.
-   * @param {string} message
-   */
   function showPaymentError(message) {
     const errorBox = document.getElementById("payment-error");
     const input = document.getElementById("cash-input");
@@ -172,10 +168,6 @@
     }
   }
 
-  /**
-   * Handle a "Confirm Payment" click.
-   * Validates, builds the Transaction, and advances to the receipt screen.
-   */
   function handleConfirmPayment() {
     const input = document.getElementById("cash-input");
     if (!input) return;
@@ -206,25 +198,47 @@
     );
 
     currentTransaction = txn;
-
-    // M9 will render the receipt screen; for now we switch to it
-    // and show a minimal placeholder so the flow is testable.
-    renderReceiptPlaceholder();
+    renderReceipt();
     showScreen("receipt");
   }
 
-  /* ---------- Receipt panel (placeholder until M9) ---------- */
+  /* ---------- Receipt panel (R11, R12) ---------- */
 
-  function renderReceiptPlaceholder() {
+  function renderReceipt() {
     const panel = document.getElementById("receipt-panel");
-    if (!panel || !currentTransaction) return;
+    if (!panel) return;
+
+    if (!currentTransaction) {
+      panel.innerHTML = '<h2 class="panel-title">Receipt</h2>' +
+                        '<div class="cart-empty">No transaction to display.</div>';
+      return;
+    }
 
     const txn = currentTransaction;
+
     let html = '<h2 class="panel-title">Receipt</h2>';
     html += '<div class="feedback success show">Payment successful.</div>';
     html += '<pre id="receipt-text">' + escapeHtml(formatReceipt(txn)) + '</pre>';
-    html += '<div class="cart-footer"><button type="button" id="btn-new-txn" class="btn btn-primary" disabled>New Transaction (M9)</button></div>';
+    html += '<div class="cart-footer">';
+    html +=   '<button type="button" id="btn-new-txn" class="btn btn-primary">New Transaction</button>';
+    html += '</div>';
+
     panel.innerHTML = html;
+  }
+
+  /**
+   * R12 — reset all state for the next customer.
+   */
+  function handleNewTransaction() {
+    clearCart(cart);
+    currentTransaction = null;
+    clearPaymentError();
+
+    // Re-render both panels from scratch so no stale state survives.
+    renderCart();
+    renderPayment();  // clears the cash input because innerHTML is rebuilt
+
+    showScreen("ordering");
   }
 
   /* ---------- Event handling ---------- */
@@ -245,6 +259,9 @@
       if (cart.items.length === 0) return;
       renderPayment();
       showScreen("payment");
+      // Focus the input for fast cashier workflow.
+      const input = document.getElementById("cash-input");
+      if (input) input.focus();
       return;
     }
 
@@ -275,11 +292,23 @@
     }
   }
 
+  function handlePaymentInput(event) {
+    if (event.target.id !== "cash-input") return;
+    // CR-12: clear the error state as soon as the cashier edits the field.
+    clearPaymentError();
+  }
+
   function handlePaymentKeydown(event) {
     if (event.key === "Enter" && event.target.id === "cash-input") {
       event.preventDefault();
       handleConfirmPayment();
     }
+  }
+
+  function handleReceiptClick(event) {
+    const btn = event.target.closest("#btn-new-txn");
+    if (!btn) return;
+    handleNewTransaction();
   }
 
   /* ---------- Boot ---------- */
@@ -301,7 +330,13 @@
     const paymentPanel = document.getElementById("payment-panel");
     if (paymentPanel) {
       paymentPanel.addEventListener("click", handlePaymentClick);
+      paymentPanel.addEventListener("input", handlePaymentInput);
       paymentPanel.addEventListener("keydown", handlePaymentKeydown);
+    }
+
+    const receiptPanel = document.getElementById("receipt-panel");
+    if (receiptPanel) {
+      receiptPanel.addEventListener("click", handleReceiptClick);
     }
 
     showScreen("ordering");
@@ -313,6 +348,7 @@
     renderCart: renderCart,
     renderProducts: renderProducts,
     renderPayment: renderPayment,
+    renderReceipt: renderReceipt,
     getCurrentTransaction: function () { return currentTransaction; },
     setCurrentTransaction: function (txn) { currentTransaction = txn; }
   };

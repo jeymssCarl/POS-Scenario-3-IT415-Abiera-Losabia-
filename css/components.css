@@ -1,5 +1,5 @@
-/* components.css — Full stylesheet: M6/M7 (products, cart, buttons)
-   + M8 (payment panel). Do not remove any block. */
+/* components.css — Full stylesheet: M6/M7 (products, cart, buttons),
+   M8 (payment panel), M9 (receipt panel). Do not remove any block. */
 
 /* ---------- Panel headers ---------- */
 
@@ -12,7 +12,7 @@
   color: var(--color-text);
 }
 
-/* ---------- Product list (M6/M7) ---------- */
+/* ---------- Product list ---------- */
 
 #product-panel {
   display: flex;
@@ -52,7 +52,7 @@
   align-self: flex-start;
 }
 
-/* ---------- Buttons (M6/M7) ---------- */
+/* ---------- Buttons ---------- */
 
 .btn {
   display: inline-block;
@@ -120,7 +120,7 @@
   background: #d1d5db;
 }
 
-/* ---------- Cart table (M6/M7) ---------- */
+/* ---------- Cart table ---------- */
 
 .cart-table {
   font-size: 0.9rem;
@@ -185,7 +185,7 @@
   justify-content: flex-end;
 }
 
-/* ---------- Feedback (M6/M7) ---------- */
+/* ---------- Feedback ---------- */
 
 .feedback {
   margin-top: var(--space-sm);
@@ -211,7 +211,7 @@
   border: 1px solid #fecaca;
 }
 
-/* ---------- Payment panel (M8) ---------- */
+/* ---------- Payment panel ---------- */
 
 #payment-panel {
   max-width: 520px;
@@ -294,29 +294,6 @@
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
 }
 
-.payment-change-preview {
-  margin-top: var(--space-md);
-  padding: var(--space-md);
-  background: #f5f3ff;
-  border: 1px solid #ddd6fe;
-  border-radius: var(--radius);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.payment-change-preview .label {
-  color: var(--color-muted);
-  font-size: 0.9rem;
-}
-
-.payment-change-preview .value {
-  color: var(--color-primary);
-  font-weight: 700;
-  font-size: 1.2rem;
-  font-variant-numeric: tabular-nums;
-}
-
 .payment-actions {
   display: flex;
   justify-content: space-between;
@@ -324,7 +301,12 @@
   margin-top: var(--space-lg);
 }
 
-/* ---------- Receipt placeholder (M8 — replaced properly in M9) ---------- */
+/* ---------- Receipt panel (M9) ---------- */
+
+#receipt-panel {
+  max-width: 720px;
+  margin: 0 auto;
+}
 
 #receipt-text {
   margin-top: var(--space-md);
